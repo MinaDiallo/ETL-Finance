@@ -1,0 +1,1 @@
+# Requêtes pour calculs de KPIs
