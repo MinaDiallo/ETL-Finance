@@ -13,6 +13,8 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./sql/schema:/docker-entrypoint-initdb.d
+      - ./sql/maintenance:/sql/maintenance
+      #todo queries
     networks:
       - etl_network
 

@@ -1,4 +1,3 @@
-# Création d'index pour optimisation-- Indexes pour optimisation des performances
 -- Fichier: sql/maintenance/indexes.sql
 
 -- Indexes pour raw.stock_prices
