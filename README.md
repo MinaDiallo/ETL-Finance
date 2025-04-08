@@ -49,7 +49,7 @@ etl-finance/
 
 1. Cloner le dépôt :
    ```
-   git clone https://github.com/votre-nom-utilisateur/etl-finance.git
+   git clone https://github.com/MinaDIALLO/etl-finance.git
    cd etl-finance
    ```
 
