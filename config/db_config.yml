@@ -1,1 +1,23 @@
-Configuration de la base PostgreSQL
+# Configuration de la base de données PostgreSQL pour ETL-Finance
+
+database:
+  postgres:
+    host: "postgres"           # Nom du service dans docker-compose
+    port: 5432                 # Port standard PostgreSQL
+    database: "finance_data"   # Nom de votre base de données
+    username: "etl_user"       # Utilisateur défini dans docker-compose
+    password: "etl_password"   # Mot de passe défini dans docker-compose
+    schemas:
+      raw: "raw"
+      staging: "staging"
+      analytics: "analytics"
+
+# Configuration des environnements
+environments:
+  development:
+    connection_pool: 5
+    log_level: "debug"
+  
+  production:
+    connection_pool: 10
+    log_level: "info"

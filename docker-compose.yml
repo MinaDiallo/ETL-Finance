@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres:14
+    container_name: etl_finance_db
+    environment:
+      POSTGRES_USER: etl_user
+      POSTGRES_PASSWORD: etl_password
+      POSTGRES_DB: finance_data
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql/schema:/docker-entrypoint-initdb.d
+    networks:
+      - etl_network
+
+  # Vos autres services existants...
+
+networks:
+  etl_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
