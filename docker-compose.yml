@@ -1,6 +1,26 @@
 version: '3'
 
 services:
+  etl_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: etl_finance_app
+    depends_on:
+      - postgres
+    volumes:
+      - ./:/app
+      - ./data:/app/data
+    environment:
+      - PYTHONPATH=/app
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=finance_data
+      - DB_USER=etl_user
+      - DB_PASSWORD=etl_password
+    networks:
+      - etl_network
+
   postgres:
     image: postgres:14
     container_name: etl_finance_db
