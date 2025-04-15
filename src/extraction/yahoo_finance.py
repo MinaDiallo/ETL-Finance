@@ -148,6 +148,20 @@ class YahooFinanceExtractor:
             logger.error(f"Erreur lors de l'extraction des données financières pour {symbol}: {e}")
             return None
     
+    def _save_raw_data(self, df, symbol, data_type):
+    
+        try:
+            # Créer un nom de fichier avec horodatage
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"{symbol}_{data_type}_{timestamp}.csv"
+            filepath = os.path.join(self.raw_data_dir, filename)
+            
+            # Sauvegarder en CSV
+            df.to_csv(filepath, index=False)
+            logger.info(f"Données sauvegardées dans {filepath}")
+        except Exception as e:
+            logger.error(f"Erreur lors de la sauvegarde des données: {e}")
+    
     def get_multiple_tickers_data(self, symbols, start_date=None, end_date=None):
         """
         Récupère les données historiques pour plusieurs symboles boursiers
@@ -155,4 +169,125 @@ class YahooFinanceExtractor:
         Args:
             symbols (list): Liste des symboles boursiers
             start_date (str, optional): Date de début au format 'YYYY-MM-DD'
-            end_date (str, optional): Date de fin au format"""
+            end_date (str, optional): Date de fin au format 'YYYY-MM-DD'
+        
+        Returns:
+            pandas.DataFrame: DataFrame contenant les données historiques pour tous les symboles
+            """
+        try:
+            logger.info(f"Extraction des données pour plusieurs symboles: {symbols}")
+            
+            # Vérifier si les dates sont spécifiées
+            if start_date is None or end_date is None:
+                # Si les dates ne sont pas spécifiées, utiliser yfinance avec period
+                data = yf.download(
+                    tickers=symbols,
+                    period="1y",  # Par défaut, récupérer les données de la dernière année
+                    group_by='ticker',
+                    auto_adjust=True,
+                    threads=True
+                )
+            else:
+                # Si les dates sont spécifiées, les utiliser
+                data = yf.download(
+                    tickers=symbols,
+                    start=start_date,
+                    end=end_date,
+                    group_by='ticker',
+                    auto_adjust=True,
+                    threads=True
+                )
+            
+            # Vérifier si des données ont été récupérées
+            if data.empty:
+                logger.warning(f"Aucune donnée récupérée pour les symboles {symbols}")
+                return None
+            
+            # Traitement des données pour un seul symbole (cas particulier)
+            if len(symbols) == 1:
+                symbol = symbols[0]
+                data['Symbol'] = symbol
+                df = data.reset_index()
+                
+                # Renommer les colonnes
+                df.rename(columns={
+                    'Date': 'date',
+                    'Open': 'open',
+                    'High': 'high',
+                    'Low': 'low',
+                    'Close': 'close',
+                    'Volume': 'volume',
+                    'Symbol': 'symbol'
+                }, inplace=True)
+                
+                # Sauvegarder les données brutes
+                self._save_raw_data(df, symbol, "historical_multiple")
+                return df
+            
+            # Traitement pour plusieurs symboles
+            all_data = []
+            
+            for symbol in symbols:
+                if symbol in data.columns.levels[0]:
+                    # Extraire les données pour ce symbole
+                    symbol_data = data[symbol].copy()
+                    symbol_data['symbol'] = symbol
+                    symbol_data = symbol_data.reset_index()
+                    
+                    # Renommer les colonnes
+                    symbol_data.rename(columns={
+                        'Date': 'date',
+                        'Open': 'open',
+                        'High': 'high',
+                        'Low': 'low',
+                        'Close': 'close',
+                        'Volume': 'volume'
+                    }, inplace=True)
+                    
+                    all_data.append(symbol_data)
+        
+            if not all_data:
+                logger.warning("Aucune donnée valide récupérée")
+                return None
+            
+            # Combiner tous les DataFrames
+            combined_df = pd.concat(all_data, ignore_index=True)
+            
+            # Sauvegarder les données brutes
+            symbols_str = "_".join(symbols)
+            self._save_raw_data(combined_df, symbols_str, "historical_multiple")
+            
+            return combined_df
+        
+        except Exception as e:
+            logger.error(f"Erreur lors de l'extraction des données pour plusieurs symboles: {e}")
+            return None
+            
+# Exemple d'utilisation
+if __name__ == "__main__":
+    extractor = YahooFinanceExtractor()
+    
+    # Extraire les données historiques pour Apple
+    apple_data = extractor.get_historical_data("AAPL", period="1y", interval="1d")
+    if apple_data is not None:
+        print(f"Données historiques pour AAPL: {len(apple_data)} entrées")
+        print(apple_data.head())
+    
+    # Extraire les informations de l'entreprise pour Microsoft
+    msft_info = extractor.get_company_info("MSFT")
+    if msft_info is not None:
+        print(f"Informations sur MSFT récupérées")
+    
+    # Extraire les données financières pour Google
+    googl_financials = extractor.get_financials("GOOGL")
+    if googl_financials is not None:
+        print("États financiers pour GOOGL récupérés")
+    
+    # Extraire les données pour plusieurs symboles
+    multi_data = extractor.get_multiple_tickers_data(
+        ["AAPL", "MSFT", "GOOGL"], 
+        start_date=(datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d"),
+        end_date=datetime.now().strftime("%Y-%m-%d")
+    )
+    if multi_data is not None:
+        print(f"Données multi-symboles récupérées")

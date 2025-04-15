@@ -73,6 +73,7 @@ class AlphaVantageExtractor:
             "apikey": self.api_key,
             "datatype": "json"
         }
+        print(params, outputsize)
         
         try:
             logger.info(f"Extraction des données quotidiennes pour {symbol}")
@@ -80,6 +81,7 @@ class AlphaVantageExtractor:
             response.raise_for_status()  # Lève une exception si la requête a échoué
             
             data = response.json()
+            print(data)
             
             # Vérifier si l'API a renvoyé une erreur
             if "Error Message" in data:
@@ -206,14 +208,14 @@ if __name__ == "__main__":
     
 
     time.sleep(15)
-    msft_data = extractor.get_daily_adjusted("MSFT", outputsize="compact")
+    #msft_data = extractor.get_daily_adjusted("MSFT", outputsize="compact")
 
     if apple_data is not None:
         print(apple_data.head())
     
     # Extraire les informations de l'entreprise pour Microsoft
-    aapl_overview = extractor.get_company_overview("AAPL")
-    ms_overview = extractor.get_company_overview("MSFT")
+    #aapl_overview = extractor.get_company_overview("AAPL")
+    #ms_overview = extractor.get_company_overview("MSFT")
     
-    if ms_overview is not None:
-        print(ms_overview)
+    #if ms_overview is not None:
+     #   print(ms_overview)
